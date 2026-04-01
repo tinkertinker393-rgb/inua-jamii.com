@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Balls Game</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #0f0f0f; color: white; padding-top: 50px; }
+        .container { max-width: 450px; margin: auto; padding: 20px; border: 1px solid #333; border-radius: 15px; background: #1a1a1a; }
+        .ball-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 25px 0; }
+        .ball { 
+            width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffd700, #8b6508);
+            display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold;
+            cursor: pointer; transition: 0.3s; color: #000; border: none;
+        }
+        .ball:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255,215,0,0.3); }
+        input { padding: 15px; width: 90%; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 15px; font-size: 18px; }
+        #status { margin-top: 20px; font-weight: bold; color: #25d366; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lucky Balls 🎰</h1>
+        <p>Enter number to play for 3 KES</p>
+        <input type="number" id="phone" placeholder="2547XXXXXXXX" />
+        <div class="ball-grid">
+            <button class="ball" onclick="play(1)">1</button>
+            <button class="ball" onclick="play(2)">2</button>
+            <button class="ball" onclick="play(3)">3</button>
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function play(num) {
+            const phone = document.getElementById('phone').value;
+            const status = document.getElementById('status');
+            
+            if (!phone.startsWith('254') || phone.length !== 12) {
+                alert("Use format: 254712345678");
+                return;
+            }
+
+            status.innerText = "Requesting M-PESA PIN prompt...";
+
+            try {
+                const res = await fetch('/api/stkpush', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, amount: 3 })
+                });
+                const data = await res.json();
+                status.innerText = data.CustomerMessage || "Check your phone!";
+            } catch (err) {
+                status.innerText = "Error triggering payment.";
+            }
+        }
+    </script>
+</body>
+</html>
