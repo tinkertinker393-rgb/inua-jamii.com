@@ -3,56 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Balls Game</title>
+    <title>Inua Jamii | Financial Uplift Forum</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #0f0f0f; color: white; padding-top: 50px; }
-        .container { max-width: 450px; margin: auto; padding: 20px; border: 1px solid #333; border-radius: 15px; background: #1a1a1a; }
-        .ball-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 25px 0; }
-        .ball { 
-            width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffd700, #8b6508);
-            display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold;
-            cursor: pointer; transition: 0.3s; color: #000; border: none;
-        }
-        .ball:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255,215,0,0.3); }
-        input { padding: 15px; width: 90%; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 15px; font-size: 18px; }
-        #status { margin-top: 20px; font-weight: bold; color: #25d366; }
+        :root { --primary: #1b5e20; --accent: #ffd700; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #333; }
+        .nav { background: var(--primary); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .container { max-width: 500px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: var(--primary); font-size: 1.4rem; text-align: center; margin-bottom: 25px; }
+        .input-box { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .tier-list { border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+        .tier-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .tier-item:last-child { border-bottom: none; }
+        .tier-info { font-size: 0.95rem; }
+        .tier-info span { display: block; color: var(--primary); font-weight: bold; font-size: 1.1rem; }
+        .join-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .join-btn:hover { background: #2e7d32; }
+        #msg { text-align: center; margin-top: 15px; font-weight: 600; min-height: 20px; }
     </style>
 </head>
 <body>
+    <div class="nav">
+        <h1>INUA JAMII</h1>
+        <p>Community Empowerment Program</p>
+    </div>
+
     <div class="container">
-        <h1>Lucky Balls 🎰</h1>
-        <p>Enter number to play for 3 KES</p>
-        <input type="number" id="phone" placeholder="2547XXXXXXXX" />
-        <div class="ball-grid">
-            <button class="ball" onclick="play(1)">1</button>
-            <button class="ball" onclick="play(2)">2</button>
-            <button class="ball" onclick="play(3)">3</button>
+        <h2>Select Contribution Tier</h2>
+        <div class="input-box">
+            <label>M-PESA Phone Number</label>
+            <input type="number" id="phone" placeholder="e.g., 254712345678">
         </div>
-        <div id="status"></div>
+
+        <div class="tier-list" id="tiersContainer">
+            </div>
+
+        <div id="msg"></div>
     </div>
 
     <script>
-        async function play(num) {
+        const tiers = [
+            {in: 100, out: 1000}, {in: 200, out: 1500}, {in: 350, out: 3500},
+            {in: 400, out: 4000}, {in: 600, out: 6000}, {in: 700, out: 7000},
+            {in: 800, out: 8000}, {in: 900, out: 9000}, {in: 1000, out: 10000},
+            {in: 1500, out: 15000}, {in: 5000, out: 50000}, {in: 10000, out: 100000}
+        ];
+
+        const container = document.getElementById('tiersContainer');
+        tiers.forEach(t => {
+            container.innerHTML += `
+                <div class="tier-item">
+                    <div class="tier-info">Pay KES ${t.in} <span>Get KES ${t.out.toLocaleString()}</span></div>
+                    <button class="join-btn" onclick="initiate('${t.in}', '${t.out}')">Join</button>
+                </div>
+            `;
+        });
+
+        async function initiate(amt, expected) {
             const phone = document.getElementById('phone').value;
-            const status = document.getElementById('status');
-            
+            const msg = document.getElementById('msg');
             if (!phone.startsWith('254') || phone.length !== 12) {
-                alert("Use format: 254712345678");
-                return;
+                alert("Please use format 2547XXXXXXXX"); return;
             }
-
-            status.innerText = "Requesting M-PESA PIN prompt...";
-
+            msg.style.color = "#1b5e20";
+            msg.innerText = "Connecting to Safaricom...";
+            
             try {
                 const res = await fetch('/api/stkpush', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone, amount: 3 })
+                    body: JSON.stringify({ phone, amount: amt, win: expected })
                 });
-                const data = await res.json();
-                status.innerText = data.CustomerMessage || "Check your phone!";
-            } catch (err) {
-                status.innerText = "Error triggering payment.";
+                msg.innerText = "Check your phone for the PIN prompt!";
+            } catch (e) {
+                msg.style.color = "red";
+                msg.innerText = "Error: Could not reach server.";
             }
         }
     </script>
